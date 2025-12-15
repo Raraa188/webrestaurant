@@ -120,14 +120,25 @@ const OrderHistory = () => {
                 ) : (
                     <div className="history-grid">
                         {sortedOrders.map((order) => (
-                            <div key={`${order.queueNumber}-${order.timestamp}`} className="history-card card fade-in">
+                            <div
+                                key={`${order.queueNumber}-${order.timestamp}`}
+                                className={`history-card card fade-in ${order.status === 'cancelled' ? 'cancelled-order' : ''}`}
+                            >
                                 <div className="history-card-header">
                                     <div className="queue-badge">
                                         <span className="queue-label">Antrian</span>
                                         <span className="queue-num">#{order.queueNumber}</span>
                                     </div>
-                                    <span className="badge badge-success">✓ Selesai</span>
+                                    <span className={`badge ${order.status === 'cancelled' ? 'badge-danger' : 'badge-success'}`}>
+                                        {order.status === 'cancelled' ? '❌ Dibatalkan' : '✓ Selesai'}
+                                    </span>
                                 </div>
+
+                                {order.status === 'cancelled' && order.cancelReason && (
+                                    <div className="cancel-reason-box">
+                                        ⚠️ {order.cancelReason}
+                                    </div>
+                                )}
 
                                 {/* Customer Info */}
                                 <div className="customer-info">

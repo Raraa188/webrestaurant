@@ -1,9 +1,19 @@
 import { useQueue } from '../context/QueueContext';
 import { WarningIcon } from './Icons';
 import './DisplayMonitor.css';
+import { useState, useEffect } from 'react';
 
 const DisplayMonitor = () => {
     const { queueList, skipOrder } = useQueue();
+    const [voiceEnabled, setVoiceEnabled] = useState(() => {
+        const saved = localStorage.getItem('voiceEnabled');
+        return saved !== 'false'; // Default true
+    });
+
+    // Save voice preference to localStorage
+    useEffect(() => {
+        localStorage.setItem('voiceEnabled', voiceEnabled.toString());
+    }, [voiceEnabled]);
 
     // Get completed orders (ready to pick up)
     const completedOrders = queueList.filter(order => order.status === 'completed');
@@ -26,8 +36,18 @@ const DisplayMonitor = () => {
     return (
         <div className="display-monitor">
             <div className="monitor-header">
-                <h1>Restoran Kita</h1>
-                <p className="subtitle">Monitor Antrian</p>
+                <div>
+                    <h1>Restoran Kita</h1>
+                    <p className="subtitle">Monitor Antrian</p>
+                </div>
+                <button
+                    onClick={() => setVoiceEnabled(!voiceEnabled)}
+                    className={`btn ${voiceEnabled ? 'btn-primary' : 'btn-secondary'}`}
+                    title={voiceEnabled ? 'Suara Aktif' : 'Suara Nonaktif'}
+                    style={{ marginLeft: 'auto' }}
+                >
+                    {voiceEnabled ? '🔊 Suara ON' : '🔇 Suara OFF'}
+                </button>
             </div>
 
             <div className="monitor-content">
@@ -65,9 +85,9 @@ const DisplayMonitor = () => {
                                         <button
                                             className="btn-skip"
                                             onClick={() => skipOrder(order.queueNumber)}
-                                            title={order.skipCount >= 1 ? "Skip lagi akan membatalkan pesanan" : "Lewati antrian"}
+                                            title={order.skipCount >= 1 ? "Lewati lagi akan menghanguskan pesanan" : "Lewati pesanan"}
                                         >
-                                            {order.skipCount >= 1 ? '⚠️ Skip (Akan Batal)' : 'Lewati'}
+                                            {order.skipCount >= 1 ? '⚠️ Lewati (Hangus)' : 'Lewati'}
                                         </button>
                                     </div>
                                 </div>

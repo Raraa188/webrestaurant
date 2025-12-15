@@ -8,7 +8,6 @@ import {
     saveToOrderHistory,
     clearAllData as clearStorageData,
 } from '../utils/localStorage';
-import { saveOrderToDatabase, getOrderHistory, clearOrderHistory } from '../services/database';
 import { menuData } from '../data/menuData';
 
 const QueueContext = createContext();
@@ -28,14 +27,24 @@ export const QueueProvider = ({ children }) => {
         saveQueueCounter(queueCounter);
     }, [queueCounter]);
 
-    // Load order history from Supabase on mount
-    useEffect(() => {
-        const loadHistoryFromDatabase = async () => {
-            const history = await getOrderHistory();
-            setOrderHistory(history);
-        };
-        loadHistoryFromDatabase();
-    }, []);
+    // Voice announcement function
+    const announceQueue = (queueNumber) => {
+        // Check if voice is enabled from localStorage
+        const voiceEnabled = localStorage.getItem('voiceEnabled');
+        if (voiceEnabled === 'false' || !window.speechSynthesis) return;
+
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        const text = `Antrian nomor ${queueNumber}, pesanan Anda sudah siap`;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'id-ID';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        window.speechSynthesis.speak(utterance);
+    };
 
     // SIMPLE AUTO-PROGRESS - Proses satu per satu, 5 detik per tahap
     useEffect(() => {
@@ -48,33 +57,65 @@ export const QueueProvider = ({ children }) => {
 
                 if (preparingOrder) {
                     // Jika ada yang preparing, selesaikan (preparing -> completed)
-                    return prevList.map(async (order) => {
+                    const updatedList = prevList.map(order => {
                         if (order.queueNumber === preparingOrder.queueNumber) {
                             const completed = { ...order, status: 'completed' };
-                            // Save to database
-                            await saveOrderToDatabase(completed);
-                            // Also save to localStorage as backup
                             saveToOrderHistory(completed);
-                            // Refresh history from database
-                            const updatedHistory = await getOrderHistory();
-                            setOrderHistory(updatedHistory);
+                            setOrderHistory(loadOrderHistory());
+
+                            // Announce queue number dengan suara
+                            announceQueue(completed.queueNumber);
+
                             return completed;
                         }
                         return order;
                     });
+                    return updatedList;
                 }
 
-                // Jika tidak ada yang preparing, ambil waiting pertama
-                const waitingOrder = prevList.find(o => o.status === 'waiting');
+                // Jika tidak ada yang preparing, ambil waiting dengan prioritas
+                let waitingOrders = prevList.filter(o => o.status === 'waiting');
 
-                if (waitingOrder) {
-                    // Mulai proses (waiting -> preparing)
-                    return prevList.map(order => {
-                        if (order.queueNumber === waitingOrder.queueNumber) {
-                            return { ...order, status: 'preparing' };
-                        }
-                        return order;
-                    });
+                if (waitingOrders.length > 0) {
+                    // Helper: cek apakah order punya main course
+                    const hasMainCourse = (order) => {
+                        return order.items.some(item => item.category === 'Main Course');
+                    };
+
+                    // Reorder waiting queue berdasarkan prioritas
+                    // 1. Order tanpa main course (prioritas tinggi)
+                    // 2. Order dengan main course (prioritas rendah)
+                    const ordersWithoutMainCourse = waitingOrders.filter(o => !hasMainCourse(o));
+                    const ordersWithMainCourse = waitingOrders.filter(o => hasMainCourse(o));
+
+                    // Jika ada order dengan main course, pindahkan ke posisi +2
+                    let reorderedWaiting = [];
+                    if (ordersWithMainCourse.length > 0 && ordersWithoutMainCourse.length > 0) {
+                        // Ambil order tanpa main course dulu
+                        reorderedWaiting = [...ordersWithoutMainCourse];
+
+                        // Insert order dengan main course di posisi +2
+                        ordersWithMainCourse.forEach(mainCourseOrder => {
+                            const insertPos = Math.min(2, reorderedWaiting.length);
+                            reorderedWaiting.splice(insertPos, 0, mainCourseOrder);
+                        });
+                    } else {
+                        // Jika semua sama jenisnya, tetap urutan asli
+                        reorderedWaiting = waitingOrders;
+                    }
+
+                    // Ambil order pertama dari waiting yang sudah direorder
+                    const nextOrder = reorderedWaiting[0];
+
+                    // Update queue dengan urutan baru
+                    const otherOrders = prevList.filter(o => o.status !== 'waiting');
+                    const newWaitingQueue = reorderedWaiting.map(order =>
+                        order.queueNumber === nextOrder.queueNumber
+                            ? { ...order, status: 'preparing' }
+                            : order
+                    );
+
+                    return [...otherOrders, ...newWaitingQueue];
                 }
 
                 // Hapus completed setelah 10 detik
@@ -141,7 +182,7 @@ export const QueueProvider = ({ children }) => {
             status: 'waiting',
             paymentMethod,
             timestamp: new Date().toISOString(),
-            skipCount: 0, // Track how many times order has been skipped
+            skipCount: 0,
         };
 
         setQueueList((prev) => [...prev, newOrder]);
@@ -151,21 +192,14 @@ export const QueueProvider = ({ children }) => {
         return queueCounter;
     };
 
-    const updateQueueStatus = async (queueNumber, newStatus) => {
+    const updateQueueStatus = (queueNumber, newStatus) => {
         setQueueList((prevList) =>
             prevList.map((order) => {
                 if (order.queueNumber === queueNumber) {
                     const updatedOrder = { ...order, status: newStatus };
                     if (newStatus === 'completed') {
-                        // Save to database asynchronously
-                        saveOrderToDatabase(updatedOrder).then(() => {
-                            // Refresh history from database
-                            getOrderHistory().then(history => {
-                                setOrderHistory(history);
-                            });
-                        });
-                        // Also save to localStorage as backup
                         saveToOrderHistory(updatedOrder);
+                        setOrderHistory(loadOrderHistory());
                     }
                     return updatedOrder;
                 }
@@ -174,45 +208,61 @@ export const QueueProvider = ({ children }) => {
         );
     };
 
-    const clearAllData = async () => {
+    const clearAllData = () => {
         setQueueList([]);
         setQueueCounter(1);
+        setOrderHistory([]);
         setCurrentCart([]);
         clearStorageData();
-        // Clear from database
-        await clearOrderHistory();
-        setOrderHistory([]);
     };
 
-    // Skip order function: move back 2 positions or cancel if skipped 2 times
+    // Skip order: 2x skip = hangus
     const skipOrder = (queueNumber) => {
         setQueueList((prevList) => {
-            const orderIndex = prevList.findIndex(o => o.queueNumber === queueNumber);
-            if (orderIndex === -1) return prevList;
+            const order = prevList.find(o => o.queueNumber === queueNumber);
+            if (!order) return prevList;
 
-            const order = prevList[orderIndex];
             const newSkipCount = (order.skipCount || 0) + 1;
 
-            // If skipped 2 times, remove from queue (cancel order)
+            // Jika sudah di-skip 2 kali, hapus (hangus)
             if (newSkipCount >= 2) {
-                console.log(`Order #${queueNumber} cancelled after 2 skips`);
+                console.log(`Pesanan #${queueNumber} hangus (skip 2x)`);
+
+                // Simpan ke riwayat sebagai "dibatalkan"
+                const cancelledOrder = {
+                    ...order,
+                    status: 'cancelled',
+                    skipCount: newSkipCount,
+                    cancelledAt: new Date().toISOString(),
+                    cancelReason: 'Tidak diambil (2x skip)'
+                };
+                saveToOrderHistory(cancelledOrder);
+                setOrderHistory(loadOrderHistory());
+
                 return prevList.filter(o => o.queueNumber !== queueNumber);
             }
 
-            // Move back 2 positions
-            const updatedOrder = { ...order, skipCount: newSkipCount, status: 'waiting' };
+            // Skip pertama: mundur 2 posisi ke waiting queue
+            const updatedOrder = {
+                ...order,
+                status: 'waiting',
+                skipCount: newSkipCount
+            };
+
+            // Remove dari posisi current
             const newList = prevList.filter(o => o.queueNumber !== queueNumber);
 
-            // Find new position (2 positions back from current)
+            // Pisahkan berdasarkan status
+            const preparingOrders = newList.filter(o => o.status === 'preparing');
             const waitingOrders = newList.filter(o => o.status === 'waiting');
-            const insertIndex = Math.min(waitingOrders.length, 2); // Move back 2 positions
+            const completedOrders = newList.filter(o => o.status === 'completed');
 
-            // Insert at new position
-            const beforeWaiting = newList.filter(o => o.status !== 'waiting');
-            const afterInsert = waitingOrders.slice(0, insertIndex);
-            const remaining = waitingOrders.slice(insertIndex);
+            // Insert di posisi +2 dalam waiting queue (mundur 2 antrian)
+            const insertPosition = Math.min(2, waitingOrders.length);
+            waitingOrders.splice(insertPosition, 0, updatedOrder);
 
-            return [...beforeWaiting, ...afterInsert, updatedOrder, ...remaining];
+            // Gabungkan kembali: preparing, waiting (dengan order yang di-skip), completed
+            return [...preparingOrders, ...waitingOrders, ...completedOrders];
         });
     };
 
@@ -241,7 +291,7 @@ export const QueueProvider = ({ children }) => {
                 status: 'waiting',
                 paymentMethod: 'cash',
                 timestamp: new Date().toISOString(),
-                skipCount: 0, // Initialize skipCount for simulation orders
+                skipCount: 0,
             };
 
             newQueues.push(newOrder);
@@ -265,7 +315,7 @@ export const QueueProvider = ({ children }) => {
         updateQueueStatus,
         addSimulationQueues,
         clearAllData,
-        skipOrder, // Export skip function
+        skipOrder,
     };
 
     return <QueueContext.Provider value={value}>{children}</QueueContext.Provider>;
