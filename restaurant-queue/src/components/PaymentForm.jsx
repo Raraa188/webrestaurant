@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQueue } from '../context/QueueContext';
 import { QRCodeSVG } from 'qrcode.react';
+import { CloseIcon, ClipboardIcon } from './Icons';
 import './PaymentForm.css';
 
 const PaymentForm = ({ onPaymentComplete, onCancel }) => {
@@ -88,7 +89,7 @@ const PaymentForm = ({ onPaymentComplete, onCancel }) => {
             <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="payment-header">
                     <h2>💳 Pembayaran</h2>
-                    <button type="button" className="btn-close" onClick={handleCancel}>✕</button>
+                    <button type="button" className="btn-close" onClick={handleCancel}><CloseIcon size={20} /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="payment-form">
@@ -113,7 +114,7 @@ const PaymentForm = ({ onPaymentComplete, onCancel }) => {
 
                     {/* Order Summary */}
                     <div className="order-summary">
-                        <h3>📋 Ringkasan Pesanan</h3>
+                        <h3><ClipboardIcon size={20} /> Ringkasan Pesanan</h3>
                         <div className="order-items">
                             {currentCart.map((item) => (
                                 <div key={item.id} className="order-item">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQueue } from '../context/QueueContext';
+import { TrashIcon, FoodIcon } from './Icons';
 import './OrderHistory.css';
 
 const OrderHistory = () => {
@@ -70,7 +71,7 @@ const OrderHistory = () => {
                             className="btn btn-secondary"
                             onClick={handleClearHistory}
                         >
-                            🗑️ Hapus Semua Data
+                            <TrashIcon size={18} /> Hapus Semua Data
                         </button>
                     </div>
                 </div>
@@ -150,7 +151,7 @@ const OrderHistory = () => {
                                     <div className="items-list">
                                         {order.items.map((item, idx) => (
                                             <div key={idx} className="item-row">
-                                                <span className="item-icon">🍽️</span>
+                                                <span className="item-icon"><FoodIcon size={16} /></span>
                                                 <span className="item-name">{item.name}</span>
                                                 <span className="item-qty">x{item.quantity}</span>
                                                 <span className="item-price">{formatPrice(item.price * item.quantity)}</span>

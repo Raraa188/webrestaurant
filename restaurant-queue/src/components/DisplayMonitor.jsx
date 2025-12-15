@@ -1,8 +1,9 @@
 import { useQueue } from '../context/QueueContext';
+import { WarningIcon } from './Icons';
 import './DisplayMonitor.css';
 
 const DisplayMonitor = () => {
-    const { queueList } = useQueue();
+    const { queueList, skipOrder } = useQueue();
 
     // Get completed orders (ready to pick up)
     const completedOrders = queueList.filter(order => order.status === 'completed');
@@ -58,9 +59,16 @@ const DisplayMonitor = () => {
                                         </div>
                                         {order.skipCount > 0 && (
                                             <div className="skip-indicator">
-                                                ⚠️ Dilewati {order.skipCount}x
+                                                <WarningIcon size={16} /> Dilewati {order.skipCount}x
                                             </div>
                                         )}
+                                        <button
+                                            className="btn-skip"
+                                            onClick={() => skipOrder(order.queueNumber)}
+                                            title={order.skipCount >= 1 ? "Skip lagi akan membatalkan pesanan" : "Lewati antrian"}
+                                        >
+                                            {order.skipCount >= 1 ? '⚠️ Skip (Akan Batal)' : 'Lewati'}
+                                        </button>
                                     </div>
                                 </div>
                             ))

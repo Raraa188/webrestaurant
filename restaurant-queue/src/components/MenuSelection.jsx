@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueue } from '../context/QueueContext';
 import { menuData, categories } from '../data/menuData';
 import PaymentForm from './PaymentForm';
+import { CartIcon, CloseIcon } from './Icons';
 import './MenuSelection.css';
 
 const MenuSelection = ({ onOrderSubmitted }) => {
@@ -21,6 +22,11 @@ const MenuSelection = ({ onOrderSubmitted }) => {
             minimumFractionDigits: 0,
         }).format(price);
     };
+
+    // Debug: Log cart changes
+    console.log('Current Cart:', currentCart);
+    console.log('Cart Item Count:', getCartItemCount());
+
 
     const handleCheckout = () => {
         setShowCart(false);
@@ -50,7 +56,7 @@ const MenuSelection = ({ onOrderSubmitted }) => {
                             className="btn btn-primary cart-toggle"
                             onClick={() => setShowCart(!showCart)}
                         >
-                            🛒 Keranjang ({getCartItemCount()})
+                            <CartIcon size={18} /> Keranjang ({getCartItemCount()})
                         </button>
                     </div>
                 </div>
@@ -98,17 +104,17 @@ const MenuSelection = ({ onOrderSubmitted }) => {
             {/* Shopping Cart Sidebar */}
             <div className={`cart-sidebar ${showCart ? 'open' : ''}`}>
                 <div className="cart-header">
-                    <h2>🛒 Keranjang</h2>
+                    <h2><CartIcon size={24} /> Keranjang ({currentCart.length})</h2>
                     <button
                         className="btn-close"
                         onClick={() => setShowCart(false)}
                     >
-                        ✕
+                        <CloseIcon size={20} />
                     </button>
                 </div>
 
                 <div className="cart-content">
-                    {currentCart.length === 0 ? (
+                    {!currentCart || currentCart.length === 0 ? (
                         <div className="cart-empty">
                             <p className="text-muted">Keranjang masih kosong</p>
                         </div>

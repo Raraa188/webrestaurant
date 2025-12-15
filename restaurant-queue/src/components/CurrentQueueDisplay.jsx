@@ -1,4 +1,5 @@
 import { useQueue } from '../context/QueueContext';
+import { FoodIcon } from './Icons';
 import './CurrentQueueDisplay.css';
 
 const CurrentQueueDisplay = () => {
@@ -42,7 +43,7 @@ const CurrentQueueDisplay = () => {
                                     <span className="text">{currentQueue.userName}</span>
                                 </div>
                                 <div className="detail-row">
-                                    <span className="icon">🍽️</span>
+                                    <span className="icon"><FoodIcon size={20} /></span>
                                     <span className="text">{currentQueue.items.length} item</span>
                                 </div>
                                 <div className="detail-row">

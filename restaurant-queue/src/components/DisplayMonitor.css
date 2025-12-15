@@ -202,6 +202,47 @@
     color: var(--error);
     font-weight: 600;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+/* Skip Button */
+.btn-skip {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, var(--warning) 0%, #f59e0b 100%);
+    color: #1a1a1a;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+}
+
+.btn-skip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.btn-skip:active {
+    transform: translateY(0);
+}
+
+/* Warning state for second skip */
+.btn-skip:has-text("Akan Batal"),
+.ready-card:has(.skip-indicator) .btn-skip {
+    background: linear-gradient(135deg, var(--error) 0%, #dc2626 100%);
+    color: white;
+}
+
+.ready-card:has(.skip-indicator) .btn-skip:hover {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
 /* Empty Display */

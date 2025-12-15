@@ -8,6 +8,7 @@ import {
     saveToOrderHistory,
     clearAllData as clearStorageData,
 } from '../utils/localStorage';
+import { saveOrderToDatabase, getOrderHistory, clearOrderHistory } from '../services/database';
 import { menuData } from '../data/menuData';
 
 const QueueContext = createContext();
@@ -27,6 +28,15 @@ export const QueueProvider = ({ children }) => {
         saveQueueCounter(queueCounter);
     }, [queueCounter]);
 
+    // Load order history from Supabase on mount
+    useEffect(() => {
+        const loadHistoryFromDatabase = async () => {
+            const history = await getOrderHistory();
+            setOrderHistory(history);
+        };
+        loadHistoryFromDatabase();
+    }, []);
+
     // SIMPLE AUTO-PROGRESS - Proses satu per satu, 5 detik per tahap
     useEffect(() => {
         const interval = setInterval(() => {
@@ -38,11 +48,16 @@ export const QueueProvider = ({ children }) => {
 
                 if (preparingOrder) {
                     // Jika ada yang preparing, selesaikan (preparing -> completed)
-                    return prevList.map(order => {
+                    return prevList.map(async (order) => {
                         if (order.queueNumber === preparingOrder.queueNumber) {
                             const completed = { ...order, status: 'completed' };
+                            // Save to database
+                            await saveOrderToDatabase(completed);
+                            // Also save to localStorage as backup
                             saveToOrderHistory(completed);
-                            setOrderHistory(loadOrderHistory());
+                            // Refresh history from database
+                            const updatedHistory = await getOrderHistory();
+                            setOrderHistory(updatedHistory);
                             return completed;
                         }
                         return order;
@@ -126,6 +141,7 @@ export const QueueProvider = ({ children }) => {
             status: 'waiting',
             paymentMethod,
             timestamp: new Date().toISOString(),
+            skipCount: 0, // Track how many times order has been skipped
         };
 
         setQueueList((prev) => [...prev, newOrder]);
@@ -135,14 +151,21 @@ export const QueueProvider = ({ children }) => {
         return queueCounter;
     };
 
-    const updateQueueStatus = (queueNumber, newStatus) => {
+    const updateQueueStatus = async (queueNumber, newStatus) => {
         setQueueList((prevList) =>
             prevList.map((order) => {
                 if (order.queueNumber === queueNumber) {
                     const updatedOrder = { ...order, status: newStatus };
                     if (newStatus === 'completed') {
+                        // Save to database asynchronously
+                        saveOrderToDatabase(updatedOrder).then(() => {
+                            // Refresh history from database
+                            getOrderHistory().then(history => {
+                                setOrderHistory(history);
+                            });
+                        });
+                        // Also save to localStorage as backup
                         saveToOrderHistory(updatedOrder);
-                        setOrderHistory(loadOrderHistory());
                     }
                     return updatedOrder;
                 }
@@ -151,12 +174,46 @@ export const QueueProvider = ({ children }) => {
         );
     };
 
-    const clearAllData = () => {
+    const clearAllData = async () => {
         setQueueList([]);
         setQueueCounter(1);
-        setOrderHistory([]);
         setCurrentCart([]);
         clearStorageData();
+        // Clear from database
+        await clearOrderHistory();
+        setOrderHistory([]);
+    };
+
+    // Skip order function: move back 2 positions or cancel if skipped 2 times
+    const skipOrder = (queueNumber) => {
+        setQueueList((prevList) => {
+            const orderIndex = prevList.findIndex(o => o.queueNumber === queueNumber);
+            if (orderIndex === -1) return prevList;
+
+            const order = prevList[orderIndex];
+            const newSkipCount = (order.skipCount || 0) + 1;
+
+            // If skipped 2 times, remove from queue (cancel order)
+            if (newSkipCount >= 2) {
+                console.log(`Order #${queueNumber} cancelled after 2 skips`);
+                return prevList.filter(o => o.queueNumber !== queueNumber);
+            }
+
+            // Move back 2 positions
+            const updatedOrder = { ...order, skipCount: newSkipCount, status: 'waiting' };
+            const newList = prevList.filter(o => o.queueNumber !== queueNumber);
+
+            // Find new position (2 positions back from current)
+            const waitingOrders = newList.filter(o => o.status === 'waiting');
+            const insertIndex = Math.min(waitingOrders.length, 2); // Move back 2 positions
+
+            // Insert at new position
+            const beforeWaiting = newList.filter(o => o.status !== 'waiting');
+            const afterInsert = waitingOrders.slice(0, insertIndex);
+            const remaining = waitingOrders.slice(insertIndex);
+
+            return [...beforeWaiting, ...afterInsert, updatedOrder, ...remaining];
+        });
     };
 
     // Add 3 simulation queues
@@ -184,6 +241,7 @@ export const QueueProvider = ({ children }) => {
                 status: 'waiting',
                 paymentMethod: 'cash',
                 timestamp: new Date().toISOString(),
+                skipCount: 0, // Initialize skipCount for simulation orders
             };
 
             newQueues.push(newOrder);
@@ -207,6 +265,7 @@ export const QueueProvider = ({ children }) => {
         updateQueueStatus,
         addSimulationQueues,
         clearAllData,
+        skipOrder, // Export skip function
     };
 
     return <QueueContext.Provider value={value}>{children}</QueueContext.Provider>;

@@ -1,4 +1,5 @@
 import { useQueue } from '../context/QueueContext';
+import { TrashIcon, TimerIcon } from './Icons';
 import './QueueDisplay.css';
 
 const QueueDisplay = ({ onBackToMenu, latestQueueNumber }) => {
@@ -68,7 +69,7 @@ const QueueDisplay = ({ onBackToMenu, latestQueueNumber }) => {
                                 onClick={handleClearAll}
                                 title="Hapus semua antrian dan history"
                             >
-                                🗑️ Hapus Semua
+                                <TrashIcon size={18} /> Hapus Semua
                             </button>
                             <button
                                 className="btn btn-secondary"
@@ -169,7 +170,7 @@ const QueueDisplay = ({ onBackToMenu, latestQueueNumber }) => {
                                             <span className="total-amount">{formatPrice(getOrderTotal(order.items))}</span>
                                         </div>
                                         <div className="auto-progress-info">
-                                            ⏱️ Otomatis diproses sistem
+                                            <TimerIcon size={16} /> Otomatis diproses sistem
                                         </div>
                                     </div>
                                 </div>
@@ -239,7 +240,7 @@ const QueueDisplay = ({ onBackToMenu, latestQueueNumber }) => {
                                             Posisi #{index + 1} dalam antrian
                                         </div>
                                         <div className="auto-progress-info">
-                                            ⏱️ Akan diproses otomatis berdasarkan prioritas
+                                            <TimerIcon size={16} /> Akan diproses otomatis berdasarkan prioritas
                                         </div>
                                     </div>
                                 </div>
