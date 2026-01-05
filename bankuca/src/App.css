@@ -1,0 +1,81 @@
+.app {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* Navigation */
+.app-nav {
+  position: sticky;
+  top: 0;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  border-bottom: 3px solid var(--border-color);
+}
+
+.app-nav button {
+  padding: 1rem 2rem;
+  border: 2px solid var(--border-color);
+  background: white;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+}
+
+.app-nav button:hover {
+  border-color: var(--secondary);
+  background: var(--bg-secondary);
+  transform: translateY(-2px);
+}
+
+.app-nav button.active {
+  background: var(--secondary);
+  color: white;
+  border-color: var(--secondary);
+}
+
+.app-nav button.active:hover {
+  background: #145018;
+}
+
+/* Main Content */
+.app-main {
+  min-height: calc(100vh - 80px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-nav {
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
+    right: 0;
+    padding: 0.75rem 1rem;
+    border-top: 3px solid var(--border-color);
+    border-bottom: none;
+  }
+
+  .app-nav button {
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .app-main {
+    padding-bottom: 80px;
+  }
+}

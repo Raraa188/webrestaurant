@@ -1,0 +1,283 @@
+.simulation {
+    min-height: 100vh;
+    background: var(--bg-primary);
+    padding: 2rem;
+}
+
+.simulation-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Header */
+.simulation-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.simulation-header h1 {
+    font-size: 2.5rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.simulation-header p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* Controls */
+.simulation-controls {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.control-group {
+    margin-bottom: 1.5rem;
+}
+
+.control-group label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.control-group select {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.75rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.control-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-buttons button {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-start {
+    background: var(--success);
+    color: white;
+}
+
+.btn-start:hover {
+    background: #2d8659;
+    transform: translateY(-2px);
+}
+
+.btn-stop {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-stop:hover {
+    background: #d97706;
+    transform: translateY(-2px);
+}
+
+.btn-reset {
+    background: var(--error);
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+/* Stats */
+.simulation-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    font-size: 3rem;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Info Sections */
+.simulation-info,
+.simulation-queue {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.simulation-info h3,
+.simulation-queue h3 {
+    font-size: 1.5rem;
+    color: var(--secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* Teller Status */
+.teller-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.teller-status {
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.teller-status.busy {
+    border-color: var(--error);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.teller-status.available {
+    border-color: var(--success);
+    background: rgba(45, 134, 89, 0.05);
+}
+
+.teller-status-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.teller-status-state {
+    font-size: 0.95rem;
+}
+
+.status-busy {
+    color: var(--error);
+    font-weight: 600;
+}
+
+.status-available {
+    color: var(--success);
+    font-weight: 600;
+}
+
+/* Queue Grid */
+.queue-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+.queue-category-card {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.queue-category-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.queue-icon {
+    font-size: 1.5rem;
+}
+
+.queue-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.queue-count {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+}
+
+.queue-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .simulation-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .queue-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .simulation-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .teller-status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .queue-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .control-buttons {
+        flex-direction: column;
+    }
+
+    .control-buttons button {
+        width: 100%;
+    }
+}

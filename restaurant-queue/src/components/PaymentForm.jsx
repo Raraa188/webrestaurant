@@ -53,28 +53,34 @@ const PaymentForm = ({ onPaymentComplete, onCancel }) => {
     };
 
     const handleSubmit = (e) => {
+        console.log('🔵 handleSubmit called!');
+        console.log('🔵 Event:', e);
+
         e.preventDefault();
         e.stopPropagation(); // Prevent event bubbling
 
-        console.log('Form submitted');
-        console.log('User name:', userName);
-        console.log('Payment method:', paymentMethod);
-        console.log('Cart:', currentCart);
+        console.log('🔵 Form submitted');
+        console.log('🔵 User name:', userName);
+        console.log('🔵 Payment method:', paymentMethod);
+        console.log('🔵 Cart:', currentCart);
+        console.log('🔵 Cart length:', currentCart.length);
 
         if (!validateForm()) {
-            console.log('Validation failed');
+            console.log('❌ Validation failed');
+            console.log('❌ Errors:', errors);
             return;
         }
 
-        console.log('Calling submitOrder...');
+        console.log('✅ Validation passed');
+        console.log('🔵 Calling submitOrder...');
         const queueNumber = submitOrder(userName.trim(), paymentMethod);
-        console.log('Queue number received:', queueNumber);
+        console.log('🔵 Queue number received:', queueNumber);
 
         if (queueNumber) {
-            console.log('Payment complete, calling onPaymentComplete');
+            console.log('✅ Payment complete, calling onPaymentComplete');
             onPaymentComplete(queueNumber);
         } else {
-            console.error('Failed to get queue number');
+            console.error('❌ Failed to get queue number');
         }
     };
 
@@ -199,7 +205,14 @@ const PaymentForm = ({ onPaymentComplete, onCancel }) => {
                         <button type="button" className="btn btn-secondary" onClick={handleCancel}>
                             Cancelled
                         </button>
-                        <button type="submit" className="btn btn-primary">
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            onClick={(e) => {
+                                console.log('🟢 Button clicked!', e);
+                                console.log('🟢 Button type:', e.currentTarget.type);
+                            }}
+                        >
                             Pay & Take Queue
                         </button>
                     </div>
